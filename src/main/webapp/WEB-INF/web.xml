@@ -1,0 +1,132 @@
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+	<display-name>Archetype Created Web Application</display-name>
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath:spring-app.xml</param-value>
+	</context-param>
+	<context-param>
+		<param-name>contextClass</param-name>
+		<param-value>com.jsdx.kato.common.context.KatoXmlWebApplicationContext</param-value>
+	</context-param>
+	<!-- <listener>
+		<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+	</listener> -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	<!-- 防止缓存泄露 -->
+	<listener>
+		<listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
+	</listener>
+
+	<!-- 配置字符编码过滤器，编码格式设为UTF-8，避免中文乱码 -->
+	<filter>
+		<filter-name>characterEncodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<async-supported>true</async-supported>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		<init-param>
+			<param-name>forceEncoding</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>characterEncodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+	<!-- html中form表单只支持GET与POST请求，而DELETE、PUT等method并不支持，spring3添加了一个过滤器，可以将这些请求转换为标准的http方法，使得支持GET、POST、PUT与DELETE请求 -->
+	<filter>
+		<filter-name>HiddenHttpMethodFilter</filter-name>
+		<filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+		<init-param>
+			<param-name>methodParam</param-name>
+			<!-- 参数名字设置，类似于标志位，<input type="hidden" name="method" value="put" />，form中增加对应的隐藏域 -->
+			<param-value>method</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>HiddenHttpMethodFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+	<!-- <form action="" method="put" enctype="application/x-www-form-urlencoded">，spring对put表单的支持 -->
+	<filter>
+	    <filter-name>httpPutFormFilter</filter-name>
+	    <filter-class>org.springframework.web.filter.HttpPutFormContentFilter</filter-class>
+	    <async-supported>true</async-supported>
+	</filter>
+	<filter-mapping>
+	    <filter-name>httpPutFormFilter</filter-name>
+	    <servlet-name>springServlet</servlet-name>
+	</filter-mapping>
+
+	<!-- 
+		ETAG类似于last-modify，如果没有修改则返回304，节约带宽
+		客户端第一次请求时ShallowEtagHeaderFilter包装response，设置响应头
+		ETag:"0ec689bde5d3253e521c1a727ba0b8830"
+		客户端下次请求时，发送响应头
+		If-None-Match:"0ec689bde5d3253e521c1a727ba0b8830"
+		ShallowEtagHeaderFilter读取If-None-Match内容和生成的ETag进行比较，如果相等则返回304
+		否则返回200，并设置响应头
+		ETag:新的ETag值
+	 -->
+	<filter>
+		<filter-name>shallowEtagHeaderFilter</filter-name>
+		<filter-class>org.springframework.web.filter.ShallowEtagHeaderFilter</filter-class>
+		<async-supported>true</async-supported>
+	</filter>
+	<filter-mapping>
+		<filter-name>shallowEtagHeaderFilter</filter-name>
+		<servlet-name>springServlet</servlet-name>
+	</filter-mapping>
+
+	<!-- 将http request对象绑定到线程上 -->
+	<!-- <filter>
+		<filter-name>RequestContextFilter</filter-name>
+		<filter-class>org.springframework.web.filter.RequestContextFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>RequestContextFilter</filter-name>
+		过滤哪些请求
+		<servlet-name>Faces Servlet</servlet-name>
+	</filter-mapping> -->
+
+	<!-- 配置SpringMVC -->
+	<servlet>
+		<servlet-name>springServlet</servlet-name>
+		<servlet-class>com.jsdx.kato.common.servlet.DispatcherServletExt</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:spring-mvc.xml</param-value>
+		</init-param>
+		<init-param>
+			<param-name>contextClass</param-name>
+			<param-value>com.jsdx.kato.common.context.KatoXmlWebApplicationContext</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+		<async-supported>true</async-supported>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>springServlet</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+	
+	<!-- 
+		配置了这个以后tomcat会去webapp下面一次寻找index1.jsp/index.jsp，如果都不存在则出现404异常
+		且优先级高于springmvc的<mvc:view-controller path="/" view-name="redirect:index.jsp"/>
+	 -->
+	<welcome-file-list>
+		<welcome-file>index.jsp</welcome-file>
+	</welcome-file-list>
+	
+
+	<session-config>
+		<session-timeout>30</session-timeout>
+	</session-config>
+</web-app>
